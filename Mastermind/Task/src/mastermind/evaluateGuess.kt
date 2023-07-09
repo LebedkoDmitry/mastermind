@@ -8,32 +8,24 @@ fun evaluateGuess(secret: String, guess: String): Evaluation {
     var guessLeft = ""
     var secretLeft = ""
 
-    guess.forEachIndexed { index, c ->
-        if (c == secret[index]) {
-            rightPosition++
-        } else {
-            guessLeft += c
-            secretLeft += secret[index]
+    guess.zip(secret)
+        .forEach { (guessLetter, secretLetter) ->
+            if (guessLetter == secretLetter) {
+                rightPosition++
+            } else {
+                guessLeft += guessLetter
+                secretLeft += secretLetter
+            }
         }
-    }
 
-    val secretLetterMap = HashMap<Char, Int>()
-    for (c in secretLeft) {
-        var counter = secretLetterMap.getOrDefault(c, 0)
-        counter++
-        secretLetterMap[c] = counter
-    }
+    val secretLetterMap = secretLeft.groupingBy { it }.eachCount()
 
-    val guessLetterMap = HashMap<Char, Int>()
-    for (c in guessLeft) {
-        var counter = guessLetterMap.getOrDefault(c, 0)
-        counter++
-        guessLetterMap[c] = counter
-    }
+    val guessLetterMap = guessLeft.groupingBy { it }.eachCount()
 
-    var wrongPosition = 0
-    guessLetterMap.entries.forEach { g ->
-        wrongPosition += secretLetterMap.getOrDefault(g.key, 0).coerceAtMost(g.value)
-    }
+    val wrongPosition = guessLetterMap
+        .map { (key, value) ->  secretLetterMap
+            .getOrDefault(key, 0)
+            .coerceAtMost(value)}
+        .fold(0, Integer::sum)
     return Evaluation(rightPosition, wrongPosition)
 }
