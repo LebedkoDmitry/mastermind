@@ -3,10 +3,6 @@ package mastermind
 data class Evaluation(val rightPosition: Int, val wrongPosition: Int)
 
 fun evaluateGuess(secret: String, guess: String): Evaluation {
-
-    // count correct positions
-    val rightPosition = guess.zip(secret).count { (guessLetter, secretLetter) -> guessLetter == secretLetter }
-
     // collect items, which are in wrong positions or guessed incorrectly
     val (guessLeft, secretLeft) = guess.zip(secret)
         .filter { (guessLetter, secretLetter) -> guessLetter != secretLetter }
@@ -14,10 +10,10 @@ fun evaluateGuess(secret: String, guess: String): Evaluation {
             -> (guessLeft + guessLetter) to (secretLetter + secretLeft)}
 
     // count items left in the secret
-    val secretLetterMap = secretLeft.groupingBy { it }.eachCount()
+    val secretLetterMap = secretLeft.getLetterCountMap()
 
     // count items left in the guess
-    val guessLetterMap = guessLeft.groupingBy { it }.eachCount()
+    val guessLetterMap = guessLeft.getLetterCountMap()
 
     // count wrong positions
     val wrongPosition = guessLetterMap
@@ -27,5 +23,10 @@ fun evaluateGuess(secret: String, guess: String): Evaluation {
             // (limited by amount of items guessed successfully)
             .coerceAtMost(guessLetterCount)}
         .fold(0, Integer::sum)
-    return Evaluation(rightPosition, wrongPosition)
+    return Evaluation(guess.getMatchingLettersCount(secret), wrongPosition)
 }
+
+fun String.getLetterCountMap() = this.groupingBy { it }.eachCount()
+
+fun String.getMatchingLettersCount(anotherString: String) = this.zip(anotherString)
+    .count { (guessLetter, secretLetter) -> guessLetter == secretLetter }
